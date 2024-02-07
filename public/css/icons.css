@@ -1,0 +1,34 @@
+.icon {
+  text-indent: 100%;
+  font-size: 10px;
+  background: url('../../images/icons.svg') no-repeat;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  width: 35px;
+  height: 62px;
+}
+
+.icon-question {
+  background-position: 0px 15px;
+}
+
+.icon-filter {
+  background-position: 0px -88px;
+}
+
+.icon-add {
+  background-position: 0px -88px;
+}
+
+.icon-trash {
+  background-position: 0px -88px;
+}
+
+.icon-text-view {
+  background-position: 0px -88px;
+}
+
+.icon-list-view {
+  background-position: 0px -88px;
+}

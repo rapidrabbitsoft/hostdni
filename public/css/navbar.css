@@ -1,0 +1,34 @@
+.nav-icon {
+  text-indent: 100%;
+  font-size: 10px;
+  background: url('../../images/navbar.svg') no-repeat;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  width: 40px;
+  height: 30px;
+}
+
+.nav-icon-hosts-file {
+  background-position: 0px 0px;
+}
+
+.nav-icon-block-lists {
+  background-position: 0px -35px;
+}
+
+.nav-icon-allow-lists {
+  background-position: 0px -70px;
+}
+
+.nav-icon-backups {
+  background-position: 0px -101px;
+}
+
+.nav-icon-logs {
+  background-position: 0px -133px;
+}
+
+.nav-icon-settings {
+  background-position: 0px -164px;
+}
