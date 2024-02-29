@@ -46,3 +46,14 @@ p {
 //   background-color: #f7f9fb;
 //   height: calc(100vh - 126px);
 // }
+
+
+// BlockList
+
+.custom-div {
+  height: 30vh; /* 30% of the viewport height */
+  padding: 20px; /* Padding for inner content */
+}
+.add-icon {
+  cursor: pointer; /* Makes the icon feel clickable */
+}
