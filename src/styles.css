@@ -88,6 +88,69 @@ button {
   margin-right: 5px;
 }
 
+.modal-backdrop {
+  position: absolute;
+  top: 30rem;
+  left: 60rem;
+  width: 30vw;
+  height: 30vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3300e9; /* Semi-transparent backdrop */
+  z-index: 1050; /* Ensures modal is above most other content */
+  border-radius: 10px;
+  color: white;
+}
+
+.modal-box {
+  background-color: white; /* White background for the modal */
+  color: black; /* Black text color */
+  border: 2px solid #396cd8; /* Border color */
+  border-radius: 8px; /* Rounded corners */
+  padding: 20px;
+  width: 50rem; /* Auto width based on content size */
+  max-width: 500px; /* Maximum width to keep the modal reasonably sized */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+.modal-content1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  color: #0f0f0f;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; /* Space between buttons */
+  margin-top: 20px; /* Space above the button row */
+}
+
+.confirm-button {
+  padding: 5px 15px; /* Button padding for better touch area */
+  border-radius: 4px; /* Rounded corners for buttons */
+  border: 1px solid #ccc; /* Border for buttons */
+  background-color: #f8f9fa; /* Light background for buttons */
+  cursor: pointer; /* Cursor to indicate clickable */
+  transition: background-color 0.2s; /* Smooth background color transition on hover */
+  width: 15rem;
+  color: #0f0f0f;
+}
+
+.confirm-button:hover {
+  background-color: #396cd8; /* Slightly darker background on hover */
+  color: white;
+}
+
+.confirm-para {
+  color: white;
+  align-content: center;
+  text-align: center;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
