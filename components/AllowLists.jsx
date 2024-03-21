@@ -198,14 +198,12 @@ function AllowLists() {
   // Default List logic
   const [inputIp, setInputIp] = React.useState("");
   const [inputDomain, setInputDomain] = React.useState("");
-  const [entries, setEntries] = React.useState([]);
-
-  // Loading from LS
-  React.useEffect(() => {
+  const [entries, setEntries] = React.useState(() => {
     const storedEntries =
       JSON.parse(localStorage.getItem("defaultEntries")) || [];
-    setEntries(storedEntries);
-  }, []);
+    // setEntries(storedEntries);
+    return storedEntries;
+  });
 
   React.useEffect(() => {
     localStorage.setItem("defaultEntries", JSON.stringify(entries));
@@ -246,13 +244,22 @@ function AllowLists() {
     );
 
     // Extracting domains from the 'entries' (Default Entries section)
-    const defaultEntryDomains = entries
-      .map((entry) => entry.domain)
-      .filter((domain) => domain.trim() !== "");
+    const defaultEntryDomains = JSON.parse(
+      localStorage.getItem("defaultEntries") || "[]"
+    );
+
+    // // Merging all lists while removing duplicates
+    // const masterHostAllowList = Array.from(
+    //   new Set([...defaultEntryDomains, ...manualAllow, ...domainsAllowList])
+    // );
 
     // Merging all lists while removing duplicates
     const masterHostAllowList = Array.from(
-      new Set([...defaultEntryDomains, ...manualAllow, ...domainsAllowList])
+      new Set([
+        ...entries.map((entry) => entry.domain),
+        ...manualAllow,
+        ...domainsAllowList,
+      ])
     );
 
     console.log("Updated masterHostsFileAllowList:", masterHostAllowList);

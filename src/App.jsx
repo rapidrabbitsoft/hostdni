@@ -93,12 +93,148 @@ function App() {
 
 function Settings() {
   return (
-    <div className="br text-center vh-100 p-4">
-      <div className="content-header d-flex justify-content-between br">
-        <div className="br w-100"></div>
-        <button type="button" className="btn btn-link">
-          Update
-        </button>
+    <div className="br vh-100 p-4" style={{ marginLeft: "40px" }}>
+      <div>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div style={{ flexGrow: 1, textAlign: "center", color: "#0077A0" }}>
+            <h1>Settings</h1>
+          </div>
+          <button type="button" className="btn btn-link">
+            Update
+          </button>
+        </div>
+
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            value=""
+            id="autoUpdateCheck"
+            style={{
+              backgroundColor: "grey",
+              marginTop: "4rem",
+              marginBottom: "15px",
+            }}
+          />
+          <label
+            className="form-check-label"
+            htmlFor="autoUpdateCheck"
+            style={{
+              marginTop: "4rem",
+              marginLeft: "10px",
+              color: "#4A77A0",
+              fontSize: "1rem",
+              marginBottom: "15px",
+            }}
+          >
+            Automatically update the host file
+          </label>
+        </div>
+
+        <div className="mt-3">
+          <h5 style={{ color: "#4A77A0", fontWeight: "700", fontSize: "2rem" }}>
+            Check for updates every
+          </h5>
+          <div className="d-flex align-items-center mt-3">
+            <select className="form-select me-2" style={{ width: "auto" }}>
+              <option value="" disabled>
+                Select Day
+              </option>
+              <option value="monday">Monday</option>
+              <option value="tuesday">Tuesday</option>
+              <option value="wednesday">Wednesday</option>
+              <option value="thursday">Thursday</option>
+              <option value="friday">Friday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </select>
+
+            <input
+              type="time"
+              className="form-control"
+              style={{ width: "auto" }}
+            />
+          </div>
+        </div>
+
+        <div
+          className=""
+          style={{
+            marginTop: "4rem",
+            color: "#4A77A0",
+            fontWeight: "700",
+            fontSize: "2rem",
+          }}
+        >
+          Number of inputs to save
+          <input
+            type="number"
+            className="form-control mt-2"
+            style={{ width: "8rem" }}
+            min="0"
+          />
+        </div>
+
+        <div className="" style={{ marginTop: "1rem" }}>
+          <button
+            type="button"
+            className=""
+            style={{
+              backgroundColor: "#D8D8D8",
+              color: "#0077A0",
+              marginRight: "1rem",
+            }}
+          >
+            Save
+          </button>
+        </div>
+
+        {/* Restore an existing configuration */}
+        <div className="" style={{ marginTop: "4rem", color: "#4A77A0" }}>
+          <h5>Restore an existing configuration</h5>
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              className=""
+              style={{
+                backgroundColor: "#D8D8D8",
+                color: "#0077A0",
+                marginRight: "1rem",
+              }}
+            >
+              Select File
+            </button>
+            <button
+              type="button"
+              className=""
+              style={{
+                backgroundColor: "#D8D8D8",
+                color: "#0077A0",
+                marginRight: "1rem",
+              }}
+            >
+              Restore
+            </button>
+          </div>
+        </div>
+
+        {/* Backup current configuration */}
+        <div className="" style={{ marginTop: "4rem", color: "#4A77A0" }}>
+          <h5>Backup current configuration</h5>
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              className=""
+              style={{
+                backgroundColor: "#D8D8D8",
+                color: "#0077A0",
+                marginRight: "1rem",
+              }}
+            >
+              Export
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

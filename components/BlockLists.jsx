@@ -355,6 +355,13 @@ function BlockLists() {
   //
   //
   //
+
+  const [masterHostFile, setMasterHostFile] = useState(() => {
+    // Load the masterHostFile data from localStorage, or default to an empty array
+    const saved = localStorage.getItem("masterHostBlockList");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Logic for the Master Host File
   useEffect(() => {
     const masterHostsFileAllowList = JSON.parse(
@@ -396,6 +403,8 @@ function BlockLists() {
         throw e; // Rethrow if it's not a QuotaExceededError
       }
     }
+    // Update the state as well
+    setMasterHostFile(filteredBlockList);
   }, [manualBlockList, urls, domainsBlock]);
 
   return (
