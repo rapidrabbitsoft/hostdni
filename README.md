@@ -2,6 +2,8 @@
 
 HostDNI (pronounced Host-Dee-n-eye) is an advanced hosts file management and network monitoring application for macOS.
 
+![HostDNI Application Screenshot](./appscreenshot.png)
+
 ## Features
 
 - Real-time network traffic monitoring (see all incoming/outgoing connections)
