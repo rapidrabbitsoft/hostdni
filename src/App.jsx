@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
-import { v4 as uuidv4 } from "uuid";
+import React, { useState, useEffect, useCallback } from "react";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+
+
 import "./App.scss";
 // import "../node_modules/bootstrap/dist/css/bootstrap.min.css"
 // import '../node_modules/bootstrap-icons/font/bootstrap-icons.css';
@@ -11,20 +12,227 @@ import BlockLists from "../components/BlockLists";
 import AllowLists from "../components/AllowLists";
 import Home from "../components/Home";
 import Logs from "../components/Logs";
+import HostsFile from "../components/HostsFile";
+import Backups from "../components/Backups";
+import PasswordLockScreen from "../components/PasswordLockScreen";
+import SettingsModal from "../components/SettingsModal";
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  NavLink,
-} from "react-router-dom";
+// API token key for localStorage (optional)
+const API_TOKEN_KEY = 'api_token';
+
+// Helper to fetch the API token from the backend
+const fetchApiToken = async () => {
+  const response = await fetch('http://localhost:8080/api/auth/token');
+  if (!response.ok) throw new Error('Failed to fetch API token');
+  const data = await response.json();
+  return data.token;
+};
+
+// Helper to store/retrieve token (optional: can just use in-memory)
+const storeApiToken = (token) => {
+  localStorage.setItem(API_TOKEN_KEY, token);
+};
+const getStoredApiToken = () => {
+  return localStorage.getItem(API_TOKEN_KEY);
+};
+const clearApiToken = () => {
+  localStorage.removeItem(API_TOKEN_KEY);
+};
+
+// Helper for API requests with token and auto-refresh on 401
+const createApiFetch = (getToken, setToken, setIsAuthenticated, setError) => async (url, options = {}, retry = true) => {
+  let token = getToken();
+  if (!token) {
+    try {
+      token = await fetchApiToken();
+      setToken(token);
+      storeApiToken(token);
+    } catch (err) {
+      setError('Failed to fetch API token');
+      setIsAuthenticated(false);
+      throw err;
+    }
+  }
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+  const response = await fetch(url, { ...options, headers });
+  if (response.status === 401 && retry) {
+    // Token expired/rotated, fetch new token and retry once
+    try {
+      const newToken = await fetchApiToken();
+      setToken(newToken);
+      storeApiToken(newToken);
+      const retryHeaders = { ...(options.headers || {}), Authorization: `Bearer ${newToken}` };
+      const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+      return retryResponse;
+    } catch (err) {
+      setError('Failed to refresh API token');
+      setIsAuthenticated(false);
+      throw err;
+    }
+  }
+  return response;
+};
+
+// Hash password function for password protection
+const hashPassword = (password) => {
+  // Simple hash function - in production, use a proper hashing library
+  let hash = 0;
+  if (password.length === 0) return hash.toString();
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString();
+};
 
 function App() {
+  const [apiToken, setApiToken] = useState(() => getStoredApiToken());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState(null);
+  // Password protection state
+  const [passwordProtection, setPasswordProtection] = useState(() => {
+    const saved = localStorage.getItem('passwordProtection');
+    return saved ? JSON.parse(saved) : {
+      enabled: false,
+      passwordHash: '',
+      idleTimeout: 5
+    };
+  });
+  
+  const [isLocked, setIsLocked] = useState(() => {
+    // Auto-lock on startup if password protection is enabled
+    const saved = localStorage.getItem('passwordProtection');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return settings.enabled;
+    }
+    return false;
+  });
+  const [lastActivity, setLastActivity] = useState(Date.now());
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Initialize API token on app start
+  useEffect(() => {
+    const initToken = async () => {
+      try {
+        console.log('Initializing API token...');
+        let token = getStoredApiToken();
+        console.log('Stored token found:', !!token);
+        if (!token) {
+          console.log('No stored token, fetching new one...');
+          token = await fetchApiToken();
+          console.log('New token fetched:', !!token);
+          storeApiToken(token);
+        }
+        setApiToken(token);
+        setIsAuthenticated(true);
+        setError(null);
+        console.log('Token initialization complete');
+      } catch (err) {
+        console.error('Token initialization failed:', err);
+        setError('Failed to fetch API token');
+        setIsAuthenticated(false);
+      }
+    };
+    initToken();
+  }, []);
+
+  // Initialize bootstrap-select for all select elements
+  useEffect(() => {
+    $('.selectpicker').selectpicker();
+  }, []);
+
+  // Save password protection settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('passwordProtection', JSON.stringify(passwordProtection));
+  }, [passwordProtection]);
+
+  // Activity tracking for idle timeout
+  const updateActivity = useCallback(() => {
+    setLastActivity(Date.now());
+  }, []);
+
+  // Set up activity listeners
+  useEffect(() => {
+    if (!passwordProtection.enabled) return;
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, updateActivity, true);
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, updateActivity, true);
+      });
+    };
+  }, [passwordProtection.enabled, updateActivity]);
+
+  // Check for idle timeout
+  useEffect(() => {
+    if (!passwordProtection.enabled) return;
+
+    const checkIdleTimeout = () => {
+      const idleTime = Date.now() - lastActivity;
+      const timeoutMs = passwordProtection.idleTimeout * 60 * 1000; // Convert minutes to milliseconds
+      
+      if (idleTime >= timeoutMs && !isLocked) {
+        setIsLocked(true);
+      }
+    };
+
+    const interval = setInterval(checkIdleTimeout, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [passwordProtection.enabled, passwordProtection.idleTimeout, lastActivity, isLocked]);
+
+  // Handle unlock
+  const handleUnlock = useCallback(() => {
+    setIsLocked(false);
+    setLastActivity(Date.now());
+  }, []);
+
+  // Update password protection settings
+  const updatePasswordProtection = useCallback((newSettings) => {
+    setPasswordProtection(newSettings);
+  }, []);
+
+  // Pass password protection to components that need it
+  const passwordProtectionProps = {
+    passwordProtection,
+    onUpdatePasswordProtection: updatePasswordProtection
+  };
+
+  // API fetch helper for use in components
+  const apiFetch = useCallback(
+    createApiFetch(() => apiToken, setApiToken, setIsAuthenticated, setError),
+    [apiToken]
+  );
+
+  // Show loading screen while authenticating
+  if (!isAuthenticated) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">{error ? error : 'Initializing HostDNI...'}</p>
+          {error && (
+            <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>Retry</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <nav
         id="sidebar"
-        class="d-flex flex-column flex-shrink-0 overflow-hidden nav-width"
+        className="d-flex flex-column flex-shrink-0 overflow-hidden nav-width"
       >
         <NavLink
           to="/"
@@ -65,305 +273,63 @@ function App() {
           <li className="nav-item mb-0">
             <NavLink to="/logs" className="nav-link py-3 d-flex">
               <span className="nav-icon nav-icon-logs"></span>
-              <span className="label">Network Logs</span>
+              <span className="label">Network Traffic</span>
             </NavLink>
           </li>
         </ul>
         <div className="nav-item mb-0">
-          <NavLink to="/settings" className="nav-link py-3 ps-3 d-flex">
+          <button 
+            className="nav-link py-3 ps-3 d-flex border-0 bg-transparent w-100"
+            onClick={() => setShowSettingsModal(true)}
+            style={{ color: '#fff' }}
+          >
             <span className="nav-icon nav-icon-settings"></span>
             <span className="label">Settings</span>
-          </NavLink>
+          </button>
         </div>
+        {passwordProtection.enabled && (
+          <div className="nav-item mb-0">
+            <button 
+              className="nav-link py-3 ps-3 d-flex border-0 bg-transparent w-100"
+              onClick={() => setIsLocked(true)}
+              title="Lock Application"
+              style={{ color: '#fff' }}
+            >
+              <i className="bi bi-lock-fill ms-2 me-3" style={{ fontSize: '1.2rem' }}></i>
+              <span className="label">Lock</span>
+            </button>
+          </div>
+        )}
       </nav>
-      <div id="content" class="w-100 overflow-auto">
+      <div id="content" className="w-100 overflow-auto">
         <Routes>
-          <Route path="/settings" element={<Settings />}></Route>
           <Route path="/logs" element={<Logs />}></Route>
           <Route path="/backups" element={<Backups />}></Route>
           <Route path="/allow-lists" element={<AllowLists />}></Route>
           <Route path="/block-lists" element={<BlockLists />}></Route>
-          <Route path="/hosts-file" element={<HostsFile />}></Route>
+          <Route path="/hosts-file" element={<HostsFile {...passwordProtectionProps} />}></Route>
           <Route exact path="/" element={<Home />}></Route>
         </Routes>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        isBlockServerEnabled={false}
+        onToggleBlockServer={() => {}}
+        isTauriEnv={true}
+        {...passwordProtectionProps}
+      />
+
+      {/* Password Lock Screen */}
+      <PasswordLockScreen
+        isLocked={isLocked}
+        onUnlock={handleUnlock}
+        passwordProtection={passwordProtection}
+        hashPassword={hashPassword}
+      />
     </Router>
-  );
-}
-
-function Settings() {
-  return (
-    <div className="br vh-100 p-4" style={{ marginLeft: "40px" }}>
-      <div>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div style={{ flexGrow: 1, textAlign: "center", color: "#0077A0" }}>
-            <h1>Settings</h1>
-          </div>
-          <button type="button" className="btn btn-link">
-            Update
-          </button>
-        </div>
-
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            value=""
-            id="autoUpdateCheck"
-            style={{
-              backgroundColor: "grey",
-              marginTop: "4rem",
-              marginBottom: "15px",
-            }}
-          />
-          <label
-            className="form-check-label"
-            htmlFor="autoUpdateCheck"
-            style={{
-              marginTop: "4rem",
-              marginLeft: "10px",
-              color: "#4A77A0",
-              fontSize: "1rem",
-              marginBottom: "15px",
-            }}
-          >
-            Automatically update the host file
-          </label>
-        </div>
-
-        <div className="mt-3">
-          <h5 style={{ color: "#4A77A0", fontWeight: "700", fontSize: "2rem" }}>
-            Check for updates every
-          </h5>
-          <div className="d-flex align-items-center mt-3">
-            <select className="form-select me-2" style={{ width: "auto" }}>
-              <option value="" disabled>
-                Select Day
-              </option>
-              <option value="monday">Monday</option>
-              <option value="tuesday">Tuesday</option>
-              <option value="wednesday">Wednesday</option>
-              <option value="thursday">Thursday</option>
-              <option value="friday">Friday</option>
-              <option value="saturday">Saturday</option>
-              <option value="sunday">Sunday</option>
-            </select>
-
-            <input
-              type="time"
-              className="form-control"
-              style={{ width: "auto" }}
-            />
-          </div>
-        </div>
-
-        <div
-          className=""
-          style={{
-            marginTop: "4rem",
-            color: "#4A77A0",
-            fontWeight: "700",
-            fontSize: "2rem",
-          }}
-        >
-          Number of inputs to save
-          <input
-            type="number"
-            className="form-control mt-2"
-            style={{ width: "8rem" }}
-            min="0"
-          />
-        </div>
-
-        <div className="" style={{ marginTop: "1rem" }}>
-          <button
-            type="button"
-            className=""
-            style={{
-              backgroundColor: "#D8D8D8",
-              color: "#0077A0",
-              marginRight: "1rem",
-            }}
-          >
-            Save
-          </button>
-        </div>
-
-        {/* Restore an existing configuration */}
-        <div className="" style={{ marginTop: "4rem", color: "#4A77A0" }}>
-          <h5>Restore an existing configuration</h5>
-          <div style={{ marginTop: "1rem" }}>
-            <button
-              type="button"
-              className=""
-              style={{
-                backgroundColor: "#D8D8D8",
-                color: "#0077A0",
-                marginRight: "1rem",
-              }}
-            >
-              Select File
-            </button>
-            <button
-              type="button"
-              className=""
-              style={{
-                backgroundColor: "#D8D8D8",
-                color: "#0077A0",
-                marginRight: "1rem",
-              }}
-            >
-              Restore
-            </button>
-          </div>
-        </div>
-
-        {/* Backup current configuration */}
-        <div className="" style={{ marginTop: "4rem", color: "#4A77A0" }}>
-          <h5>Backup current configuration</h5>
-          <div style={{ marginTop: "1rem" }}>
-            <button
-              type="button"
-              className=""
-              style={{
-                backgroundColor: "#D8D8D8",
-                color: "#0077A0",
-                marginRight: "1rem",
-              }}
-            >
-              Export
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Backups() {
-  return (
-    <div className="br text-center vh-100 p-4">
-      <div className="content-header d-flex justify-content-between br">
-        <div className="br w-100">
-          <h3>Backups</h3>
-        </div>
-        <button type="button" className="btn btn-link">
-          Update
-        </button>
-      </div>
-
-      <div className="mt-5 mb-2">
-        <input
-          className="w-100 form-control"
-          type="text"
-          placeholder="Search hosts file"
-        />
-      </div>
-      <div>
-        <table class="table table-striped mb-0" cellspacing="0" width="100%">
-          <thead class="fixedheader">
-            <tr>
-              <th class="text-left">
-                <input type="checkbox" />
-              </th>
-              <th class="text-center">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">December 12th, 2023</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">December 12th, 2023</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">December 12th, 2023</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">December 12th, 2023</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function HostsFile() {
-  return (
-    <div className="br text-center vh-100 p-4">
-      <div className="content-header d-flex justify-content-between br">
-        <div className="br w-100">
-          <h3>Hosts File</h3>
-        </div>
-        <button type="button" className="btn btn-link">
-          Update
-        </button>
-      </div>
-
-      <div className="mt-5 mb-2">
-        <input
-          className="w-100 form-control"
-          type="text"
-          placeholder="Search hosts file"
-        />
-      </div>
-      <div>
-        <table class="table table-striped mb-0" cellspacing="0" width="100%">
-          <thead class="fixedheader">
-            <tr>
-              <th class="text-left">
-                <input type="checkbox" />
-              </th>
-              <th class="text-center">IP</th>
-              <th class="text-center">HOST</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">127.0.0.1</td>
-              <td class="text-center">google.com</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">127.0.0.1</td>
-              <td class="text-center">google.com</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">127.0.0.1</td>
-              <td class="text-center">google.com</td>
-            </tr>
-            <tr>
-              <td class="text-left">
-                <input type="checkbox" />
-              </td>
-              <td class="text-center">127.0.0.1</td>
-              <td class="text-center">google.com</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   );
 }
 

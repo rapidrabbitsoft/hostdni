@@ -10,67 +10,24 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@babel/core": "^7.23.6",
-    "@babel/preset-env": "^7.23.6",
-    "@tauri-apps/api": "^1.5.1",
-    "babel-loader": "^9.1.3",
-    "bootstrap-icons": "^1.11.3",
-    "css-loader": "^6.8.1",
-    "favicons-webpack-plugin": "^6.0.1",
-    "file-loader": "^6.2.0",
-    "html-webpack-plugin": "^5.5.4",
-    "image-webpack-loader": "^8.1.0",
-    "mini-css-extract-plugin": "^2.7.6",
-    "react": "^18.2.0",
-    "react-bootstrap": "^2.10.1",
-    "react-dom": "^18.2.0",
-    "react-router": "^6.20.1",
-    "react-router-dom": "^6.20.1",
-    "sass-loader": "^13.3.2",
-    "style-loader": "^3.3.3",
-    "uuid": "^9.0.1",
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "@tauri-apps/api": "^2.5.0",
+    "bootstrap-icons": "^1.13.1",
+    "bootstrap-select": "^1.13.18",
+    "dexie": "^4.0.11",
+    "jquery": "^3.7.1",
+    "react": "^19.1.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19.1.0",
+    "react-router": "^6.30.1",
+    "react-router-dom": "^6.30.1",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-window": "^1.8.11"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.5.6",
-    "@vitejs/plugin-react": "^4.0.3",
-    "bootstrap": "^5.3.3",
-    "vite": "^4.5.2"
-  },
-  "js": {
-    "main": [
-      "node_modules/jquery/dist/jquery.js",
-      "node_modules/jquery.cookie/jquery.cookie.js",
-      "node_modules/bootstrap/dist/js/bootstrap.bundle.js",
-      "node_modules/bootstrap-select/dist/js/bootstrap-select.js",
-      "node_modules/vanillajs-datepicker/dist/js/datepicker-full.js",
-      "node_modules/stupid-table-plugin/stupidtable.js",
-      "node_modules/luxon/build/global/luxon.js",
-      "scr/assets/js/main.js"
-    ]
-  },
-  "css": {
-    "main": [
-      "scr/assets/scss/main.scss"
-    ],
-    "json-editor": [
-      "scr/assets/scss/json-editor.scss"
-    ]
-  },
-  "scss": [
-    "scr/assets/scss/**/*.*"
-  ],
-  "images": [
-    "scr/assets/images/**/*.*"
-  ],
-  "fonts": [
-    "scr/assets/fonts/**/*.*"
-  ],
-  "mjml": [
-    "trading/templates/mjml/**/*.*"
-  ],
-  "emails": "trading/templates/emails",
-  "output": "trading/staticfiles/dist/site",
-  "serve": "trading/staticfiles/dist"
+    "@tauri-apps/cli": "^2.6.2",
+    "@vitejs/plugin-react": "^4.5.2",
+    "bootstrap": "^5.3.7",
+    "sass-embedded": "^1.89.2",
+    "vite": "^6.3.5"
+  }
 }

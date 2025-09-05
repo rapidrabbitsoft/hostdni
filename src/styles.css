@@ -14,6 +14,29 @@
   -webkit-text-size-adjust: 100%;
 }
 
+/* Remove drop shadows from all form controls globally */
+.form-control,
+.form-select,
+.form-check-input,
+.btn {
+  box-shadow: none !important;
+}
+
+/* Remove focus outlines and shadows */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.btn:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove Bootstrap's default focus ring */
+.form-control:focus,
+.form-select:focus {
+  border-color: #dee2e6 !important;
+}
+
 .container1 {
   margin: 0;
   padding-top: 1vh;

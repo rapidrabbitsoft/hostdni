@@ -1,0 +1,488 @@
+{
+  "info": {
+    "name": "HostDNI REST API",
+    "description": "Complete collection for testing HostDNI REST API endpoints with JWT authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for login, register, and token verification",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"grant_type\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate with username and password to receive access and refresh tokens (OAuth 2.0)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set('auth_token', response.access_token);",
+                  "        pm.collectionVariables.set('refresh_token', response.refresh_token);",
+                  "        console.log('Access token saved:', response.access_token);",
+                  "        console.log('Refresh token saved:', response.refresh_token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"securepassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set('auth_token', response.access_token);",
+                  "        pm.collectionVariables.set('refresh_token', response.refresh_token);",
+                  "        console.log('Access token saved:', response.access_token);",
+                  "        console.log('Refresh token saved:', response.refresh_token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\",\n  \"grant_type\": \"refresh_token\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh access token using refresh token (OAuth 2.0)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set('auth_token', response.access_token);",
+                  "        pm.collectionVariables.set('refresh_token', response.refresh_token);",
+                  "        console.log('Tokens refreshed successfully');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/revoke",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "revoke"]
+            },
+            "description": "Revoke current access token (logout)"
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"]
+            },
+            "description": "Verify if the current access token is valid"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current user information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Host Entries",
+      "description": "CRUD operations for host entries",
+      "item": [
+        {
+          "name": "Get All Host Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hosts",
+              "host": ["{{base_url}}"],
+              "path": ["hosts"]
+            },
+            "description": "Retrieve all host entries"
+          }
+        },
+        {
+          "name": "Create Host Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ip\": \"192.168.1.100\",\n  \"hostname\": \"example.com\",\n  \"comment\": \"Example domain for testing\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hosts",
+              "host": ["{{base_url}}"],
+              "path": ["hosts"]
+            },
+            "description": "Create a new host entry"
+          }
+        },
+        {
+          "name": "Get Host Entry by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hosts/{{host_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["hosts", "{{host_entry_id}}"]
+            },
+            "description": "Get a specific host entry by ID"
+          }
+        },
+        {
+          "name": "Update Host Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ip\": \"192.168.1.101\",\n  \"hostname\": \"updated-example.com\",\n  \"comment\": \"Updated comment\",\n  \"enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hosts/{{host_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["hosts", "{{host_entry_id}}"]
+            },
+            "description": "Update an existing host entry"
+          }
+        },
+        {
+          "name": "Delete Host Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hosts/{{host_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["hosts", "{{host_entry_id}}"]
+            },
+            "description": "Delete a host entry by ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hosts Files",
+      "description": "Manage hosts file configurations",
+      "item": [
+        {
+          "name": "Get All Hosts Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/hosts-files",
+              "host": ["{{base_url}}"],
+              "path": ["hosts-files"]
+            },
+            "description": "Get all hosts file configurations"
+          }
+        },
+        {
+          "name": "Create Hosts File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Custom Hosts File\",\n  \"description\": \"Custom hosts file for development environment\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hosts-files",
+              "host": ["{{base_url}}"],
+              "path": ["hosts-files"]
+            },
+            "description": "Create a new hosts file configuration"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Backups",
+      "description": "Manage backup configurations",
+      "item": [
+        {
+          "name": "Get All Backups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/backups",
+              "host": ["{{base_url}}"],
+              "path": ["backups"]
+            },
+            "description": "Get all backup configurations"
+          }
+        },
+        {
+          "name": "Create Backup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Weekly Backup\",\n  \"description\": \"Weekly hosts file backup\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/backups",
+              "host": ["{{base_url}}"],
+              "path": ["backups"]
+            },
+            "description": "Create a new backup"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Allow Lists",
+      "description": "Manage allow list entries",
+      "item": [
+        {
+          "name": "Get All Allow Lists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/allow-lists",
+              "host": ["{{base_url}}"],
+              "path": ["allow-lists"]
+            },
+            "description": "Get all allow list entries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Block Lists",
+      "description": "Manage block list entries",
+      "item": [
+        {
+          "name": "Get All Block Lists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/block-lists",
+              "host": ["{{base_url}}"],
+              "path": ["block-lists"]
+            },
+            "description": "Get all block list entries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "description": "System endpoints for health checks and statistics",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check endpoint (no authentication required)"
+          }
+        },
+        {
+          "name": "Get System Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats",
+              "host": ["{{base_url}}"],
+              "path": ["stats"]
+            },
+            "description": "Get system statistics"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set default headers for all requests",
+          "pm.request.headers.add({",
+          "    key: 'Accept',",
+          "    value: 'application/json'",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for all requests",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON structure', function () {",
+          "    pm.response.to.have.jsonBody();",
+          "});",
+          "",
+          "// Check for common error responses",
+          "if (pm.response.code === 401) {",
+          "    pm.test('Authentication required', function () {",
+          "        const response = pm.response.json();",
+          "        pm.expect(response.error).to.include('Authentication');",
+          "    });",
+          "}",
+          "",
+          "if (pm.response.code === 404) {",
+          "    pm.test('Resource not found', function () {",
+          "        const response = pm.response.json();",
+          "        pm.expect(response.error).to.include('not found');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+} 
